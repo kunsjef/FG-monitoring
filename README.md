@@ -36,6 +36,10 @@ Publishes:
 
 All non-event sensors include expire_after (default 180s) so they go Unavailable if the task stops.
 
+## `schedule-fg-ha.ps1`
+* Script for scheduling tasks
+* Default set to schedule both scripts every minute
+
 # Prerequisites
 * Windows Server / Windows 10+ with PowerShell 5.1+ (PowerShell 7 also fine).
 * Fantasy Grounds Unity installed (set $FGRoot, default C:\FG).
@@ -76,10 +80,27 @@ powershell -NoProfile -ExecutionPolicy Bypass -File C:\Scripts\fg-ha-stats.ps1
 * You should now see a device named Fantasy Grounds Server with entities.
 
 ## 5. Schedule them (every minute)
+* Edit `schedule-fg-ha.ps1` to match your preferences
 
-.
-.
-.
+### Run the script once (in Powershell):
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File C:\Scripts\schedule-fg-ha.ps1
+```
+
+### Verify / inspect (also PowerShell):
+
+```powershell
+Get-ScheduledTask -TaskName "FG-HA-Monitor","FG-HA-Stats" | Get-ScheduledTaskInfo | Format-List *
+```
+
+### Unschedule jobs (if needed - don't do this if you want the jobs to run)
+
+```powershell
+Unregister-ScheduledTask -TaskName "FG-HA-Monitor" -Confirm:$false -ErrorAction SilentlyContinue
+Unregister-ScheduledTask -TaskName "FG-HA-Stats"   -Confirm:$false -ErrorAction SilentlyContinue
+```
+
 
 # Topics & Entities (quick map)
 
