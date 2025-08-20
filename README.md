@@ -11,6 +11,9 @@ PowerShell scripts to monitor a Fantasy Grounds Unity server on Windows and auto
 
 Your Home Assistant dashboard YAML is in docs/fg-dashboard.yaml.
 
+# Dashboard screenshot
+![Screenshot](docs/fg-dashboard.png)
+
 # How it works
 
 Both scripts publish MQTT Discovery config and state messages. Home Assistant subscribes, creates entities automatically, and keeps them updated on a schedule (e.g., every minute via Task Scheduler).
