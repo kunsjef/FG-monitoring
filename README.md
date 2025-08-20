@@ -121,11 +121,19 @@ Unregister-ScheduledTask -TaskName "FG-HA-Stats"   -Confirm:$false -ErrorAction 
 All also share availability topic fg/server/availability (online retained).
 
 # Dashboard
-* A ready-made FG view using Mushroom + ApexCharts is in:
-  * docs/fg-dashboard.yaml
-  * docs/fg-dashboard.png
+* A ready-made FG view is in:
+  * `docs/fg-dashboard.yaml`
+  * `docs/fg-dashboard.png` (screenshot)
 
-Import via Edit dashboard → Raw configuration editor (or add cards individually).
+Import via Edit dashboard → Raw configuration editor (or add cards individually). Edit to fit your
+environment and sensors ;-)
+
+My dashboard have these additional components:
+* Ping (ICMP) integration for pinging the server (https://www.home-assistant.io/integrations/ping/)
+* Mushroom cards (HACS) (https://github.com/piitaya/lovelace-mushroom)
+* Bubble cards (HACS) (https://github.com/Clooos/Bubble-Card)
+* Apexchart cards (HACS) (https://github.com/RomRider/apexcharts-card)
+* Uptime card (HACS) (https://github.com/dylandoamaral/uptime-card)
 
 # (Optional) Power & Cost (smart plug recommended)
 * Pair a plug with power monitoring in HA (Shelly, Tapo P115, Kasa KP115, Sonoff POW, etc.).
