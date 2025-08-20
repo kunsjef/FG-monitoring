@@ -32,8 +32,6 @@ $logPaths     = @("$FGRoot\console.log", "$FGRoot\network.log") | Where-Object {
 # ---- Expiry: entities go Unavailable if no updates in this window ----
 $expire = 180  # seconds
 
-# ---- State for player tracking ----
-$StateFile = "C:\Scripts\fg-ha-state.json"
 
 function To-Hashtable($obj) {
   if ($null -eq $obj) { return @{} }
@@ -43,23 +41,7 @@ function To-Hashtable($obj) {
   return $ht
 }
 
-function Load-State {
-  if (Test-Path $StateFile) {
-    try {
-      $tmp = Get-Content $StateFile -Raw | ConvertFrom-Json
-      $pos = To-Hashtable $tmp.pos
-      $players = @()
-      if ($tmp.players) { $players = @($tmp.players) }
-      return [pscustomobject]@{ pos = $pos; players = $players }
-    } catch {}
-  }
-  return [pscustomobject]@{ pos = @{}; players = @() }
-}
-
-function Save-State($st) {
-  ($st | ConvertTo-Json -Compress) | Set-Content -Path $StateFile -Encoding UTF8
-}
-
+# ============= Get players from logs =============
 # Build current player set from the last X lines of the logs (robust, idempotent)
 function Get-PlayersFromLogs {
   param(
@@ -93,8 +75,7 @@ function Get-PlayersFromLogs {
   ,(@($set.Keys | Sort-Object))
 }
 
-
-
+# ============= Get number of connected =============
 # Parse log lines and update connected players
 function Apply-PlayerEvents([object]$st, [string[]]$lines) {
   if (-not $lines) { return }
@@ -126,7 +107,6 @@ function Get-TextEncoding($path) {
   if ($b[0] -eq 0xEF -and $b[1] -eq 0xBB -and $b[2] -eq 0xBF) { return [System.Text.Encoding]::UTF8 } # UTF-8 BOM
   return [System.Text.Encoding]::UTF8  # default: UTF-8 (no BOM)
 }
-
 
 # Read only the new bytes appended to a log since last run, update file position
 function Process-LogDelta([object]$st, [string]$logPath) {
@@ -326,15 +306,40 @@ Pub "port_listening" ($portListening.ToString().ToLower()) -Retain
 
 # 4) Last player event (persistent)
 function Get-LastEventFromLogs {
-  param([string[]]$Logs, [int]$Tail = 1500)
-  $pattern = '(?i)(client\s+connected|player\s+connected|connection\s+(from|accepted)|joined|disconnected|disconnect|left|login|authenticated|connection\s+closed)'
-  $all = @()
+  param(
+    [string[]] $Logs,
+    [int] $Tail = 2000
+  )
+
+  if (-not $Logs -or $Logs.Count -eq 0) { return $null }
+
+  # Collect recent lines (order preserved: oldest -> newest)
+  $buf = @()
   foreach ($log in $Logs) {
-    if (Test-Path $log) { $all += (Get-Content $log -Tail $Tail) }
+    if (Test-Path $log) {
+      $buf += (Get-Content -Path $log -Tail $Tail)
+    }
   }
-  $evt = $all | Where-Object { $_ -match $pattern } | Select-Object -Last 1
-  return $evt
+  if ($buf.Count -eq 0) { return $null }
+
+  # Regexes (here-strings avoid quote escaping issues)
+  $rxNamed = [regex]@'
+(?i)['"]\s*([^'"]+?)\s*['"]\s+(?:connected|disconnected|left)\b
+'@
+  $rxGeneric = [regex]@'
+(?i)(client\s+connected|player\s+connected|connection\s+(?:from|accepted)|waiting\s+for\s+authorization|joined|login|authenticated|disconnect(?:ed)?|left|connection\s+closed)
+'@
+
+  # Walk from the end (newest -> oldest), prefer named; remember the first generic we see
+  $candidateGeneric = $null
+  for ($i = $buf.Count - 1; $i -ge 0; $i--) {
+    $line = $buf[$i]
+    if ([string]::IsNullOrWhiteSpace($line)) { continue }
+    if ($rxNamed.IsMatch($line)) { return $line }
+    if (-not $candidateGeneric -and $rxGeneric.IsMatch($line)) { $candidateGeneric = $line }
+  }
+  return $candidateGeneric
 }
 
-$evtLine = Get-LastEventFromLogs -Logs $logPaths -Tail 2000
+$evtLine = Get-LastEventFromLogs -Logs @("$FGRoot\console.log") -Tail 2000
 if ($evtLine) { Pub "last_event" $evtLine -Retain }
