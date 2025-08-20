@@ -1,0 +1,468 @@
+type: sections
+max_columns: 3
+title: FG
+path: fg
+icon: mdi:unicorn-variant
+sections:
+  - type: grid
+    cards:
+      - type: horizontal-stack
+        cards:
+          - type: conditional
+            conditions:
+              - entity: binary_sensor.fg_ping
+                state: "off"
+            card:
+              type: custom:mushroom-template-card
+              primary: ⚠ Server OFFLINE
+              secondary: Ping failed — check host, power or network
+              icon: mdi:server-off
+              icon_color: red
+          - type: conditional
+            conditions:
+              - entity: binary_sensor.fantasy_grounds_server_fg_app_running
+                state: "off"
+            card:
+              type: custom:mushroom-template-card
+              primary: ⚠ Fantasy Grounds is NOT running
+              secondary: Start FG on the server to accept connections
+              icon: mdi:application-brackets-outline
+              icon_color: amber
+        grid_options:
+          columns: full
+    column_span: 3
+  - type: grid
+    cards:
+      - type: custom:bubble-card
+        card_type: separator
+        name: Quick Info
+        icon: mdi:information
+        grid_options:
+          columns: full
+    column_span: 3
+  - type: grid
+    cards:
+      - type: vertical-stack
+        cards:
+          - type: custom:apexcharts-card
+            chart_type: scatter
+            graph_span: 24h
+            update_interval: 5m
+            header:
+              show: false
+            series:
+              - entity: sensor.fantasy_grounds_server_fg_cpu
+                name: CPU
+                show:
+                  in_header: false
+                color_threshold:
+                  - value: 0
+                    color: green
+                  - value: 60
+                    color: amber
+                  - value: 85
+                    color: red
+                group_by:
+                  func: avg
+                  duration: 8min
+              - entity: sensor.fantasy_grounds_server_fg_gpu0
+                name: GPU
+                group_by:
+                  func: avg
+                  duration: 8min
+              - entity: sensor.fantasy_grounds_server_fg_memory
+                name: RAM
+                group_by:
+                  func: avg
+                  duration: 8min
+            apex_config:
+              chart:
+                height: 80px
+                sparkline:
+                  enabled: true
+              markers:
+                size: 3
+              yaxis:
+                show: false
+              xaxis:
+                labels:
+                  show: false
+                axisBorder:
+                  show: false
+                axisTicks:
+                  show: false
+              grid:
+                show: false
+        grid_options:
+          columns: 36
+          rows: auto
+    column_span: 3
+  - type: grid
+    cards:
+      - square: false
+        type: grid
+        columns: 7
+        cards:
+          - type: custom:mushroom-template-card
+            primary: CPU
+            secondary: "{{ states('sensor.fantasy_grounds_server_fg_cpu') | int(0) }} %"
+            icon: mdi:cpu-64-bit
+            icon_color: >
+              {% set v = states('sensor.fantasy_grounds_server_fg_cpu')|int(0)
+              %} {% if v < 60 %} green {% elif v < 75 %} amber {% else %} red {%
+              endif %}
+            tap_action: more-info
+            layout: horizontal
+          - type: custom:mushroom-template-card
+            primary: Memory
+            secondary: "{{ states('sensor.fantasy_grounds_server_fg_memory') | int(0) }} %"
+            icon: mdi:memory
+            icon_color: >
+              {% set v =
+              states('sensor.fantasy_grounds_server_fg_memory')|int(0) %} {% if
+              v < 60 %} green {% elif v < 85 %} amber {% else %} red {% endif %}
+            tap_action: more-info
+            layout: horizontal
+          - type: custom:mushroom-template-card
+            primary: GPU
+            secondary: >-
+              {{
+              states('sensor.fantasy_grounds_server_fg_gpu0_util')
+              | int(0) }} %
+            icon: mdi:chart-bell-curve
+            icon_color: >
+              {% set v =
+              states('sensor.fantasy_grounds_server_fg_gpu0_util')|int(0)
+              %} {% if v < 60 %} green {% elif v < 75 %} amber {% else %} red {%
+              endif %}
+            tap_action: more-info
+            layout: horizontal
+          - type: custom:mushroom-template-card
+            primary: FG App
+            secondary: >
+              {% if
+              is_state('binary_sensor.fantasy_grounds_server_fg_app_running',
+              'on') %}
+                Running
+              {% else %}
+                Stopped
+              {% endif %}
+            icon: mdi:application
+            icon_color: >
+              {% set v =
+              states('binary_sensor.fantasy_grounds_server_fg_app_running') %}
+              {% if v == "on" %} green {% else %} red {% endif %}
+            tap_action: more-info
+            layout: horizontal
+          - type: custom:mushroom-template-card
+            primary: 1802/UDP
+            secondary: >
+              {% if
+              is_state('binary_sensor.fantasy_grounds_server_fg_port_listening',
+              'on') %}
+                Open
+              {% else %}
+                Closed
+              {% endif %}
+            icon: mdi:network
+            icon_color: >
+              {% set v =
+              states('binary_sensor.fantasy_grounds_server_fg_port_listening')
+              %} {% if v == "on" %} green {% else %} red {% endif %}
+            tap_action: more-info
+            layout: horizontal
+          - type: custom:mushroom-template-card
+            primary: ICMP
+            secondary: |
+              {% if is_state('binary_sensor.fg_ping', 'on') %}
+                Reply
+              {% else %}
+                No Reply
+              {% endif %}
+            icon: mdi:lan-connect
+            icon_color: >
+              {% set v = states('binary_sensor.fg_ping') %} {% if v ==
+              "on" %} green {% else %} red {% endif %}
+            tap_action: more-info
+            layout: horizontal
+          - type: custom:mushroom-template-card
+            primary: Session
+            secondary: >-
+              {% set c =
+              states('sensor.fantasy_grounds_server_fg_player_count')|int %} {%
+              if c > 0 %} {{ c }} player{{ 's' if c>1 else '' }} {{ 'now' }} {%
+              else %} idle {% endif %}
+            icon: mdi:sword-cross
+            icon_color: >-
+              {% set c =
+              states('sensor.fantasy_grounds_server_fg_player_count')|int %} {{
+              'green' if c>0 else 'grey' }}
+            tap_action: more-info
+            layout: horizontal
+        grid_options:
+          columns: full
+          rows: auto
+    column_span: 3
+  - type: grid
+    cards:
+      - type: custom:bubble-card
+        card_type: separator
+        name: Details
+        icon: mdi:chart-bar-stacked
+        grid_options:
+          columns: full
+    column_span: 3
+  - type: grid
+    cards:
+      - type: vertical-stack
+        cards:
+          - type: custom:mushroom-template-card
+            primary: Player Count
+            secondary: >-
+              {{ states('sensor.fantasy_grounds_server_fg_player_count')|int }}
+              players
+            icon: mdi:account-group
+            icon_color: >
+              {% set v =
+              states('sensor.fantasy_grounds_server_fg_player_count')|int %} {%
+              if v < 0 %} green {% else %} grey {% endif %}
+            tap_action: more-info
+            layout: horizontal
+          - type: custom:mushroom-template-card
+            primary: Player Names
+            secondary: "{{ states('sensor.fantasy_grounds_server_fg_player_names') }}"
+            icon: mdi:account-group
+            icon_color: >
+              {% set v = states('sensor.fantasy_grounds_server_fg_player_names')
+              %} {% if v == "" %} grey {% else %} green {% endif %}
+            tap_action: more-info
+            layout: horizontal
+          - type: custom:mushroom-template-card
+            primary: Last Player Event
+            secondary: "{{ states('sensor.fantasy_grounds_server_fg_last_player_event') }}"
+            icon: mdi:account-group
+            icon_color: >
+              {% set v =
+              states('sensor.fantasy_grounds_server_fg_last_player_event') %} {%
+              if v == "" %} grey {% else %} green {% endif %}
+            tap_action: more-info
+            layout: horizontal
+          - type: custom:apexcharts-card
+            experimental:
+              color_threshold: true
+              brush: true
+            header:
+              title: RAM / VRAM / Disk Usage
+              show: true
+              show_states: true
+              colorize_states: true
+            chart_type: radialBar
+            apex_config:
+              chart:
+                offsetY: 0
+                offsetX: 0
+                height: 350
+              dataLabels:
+                enabled: true
+              legend:
+                show: false
+                position: left
+                horizontalAlign: bottom
+                floating: true
+                offsetX: 20
+                offsetY: 20
+                fontSize: 14px
+                labels:
+                  useSeriesColors: true
+                markers:
+                  size: 0
+                itemMargin:
+                  vertical: 3
+              update_interval: 5m
+              plotOptions:
+                radialBar:
+                  inverseOrder: false
+                  offsetY: 0
+                  startAngle: 0
+                  endAngle: 270
+                  hollow:
+                    size: 40%
+                    background: transparent
+                  dataLabels:
+                    name:
+                      show: true
+                    value:
+                      show: true
+            series:
+              - entity: sensor.fantasy_grounds_server_fg_memory_used
+                transform: return x/1024
+                name: RAM
+                unit: " GB"
+                group_by:
+                  func: last
+                show:
+                  in_header: true
+                min: 0
+                max: 64
+              - entity: sensor.fantasy_grounds_server_fg_gpu0_vram_used
+                transform: return x/1024
+                name: VRAM
+                unit: " GB"
+                group_by:
+                  func: last
+                show:
+                  in_header: true
+                min: 0
+                max: 16
+              - entity: sensor.fantasy_grounds_server_fg_disk_c_free
+                name: Disk Usage
+                transform: return 100-x
+                unit: " %"
+                group_by:
+                  func: last
+                show:
+                  in_header: true
+                min: 0
+                max: 100
+  - type: grid
+    cards:
+      - type: vertical-stack
+        cards:
+          - type: custom:apexcharts-card
+            graph_span: 24h
+            update_interval: 30s
+            header:
+              show: true
+              title: CPU and GPU usage
+              show_states: true
+              colorize_states: true
+            yaxis:
+              - id: pct
+                min: 0
+                max: 100
+                decimals: 0
+              - id: count
+                opposite: true
+                min: 0
+                max: 10
+                decimals: 0
+            series:
+              - entity: sensor.fantasy_grounds_server_fg_cpu
+                name: CPU
+                unit: " %"
+                curve: smooth
+                yaxis_id: pct
+                group_by:
+                  func: avg
+                  duration: 15min
+                show:
+                  extremas: true
+              - entity: sensor.fantasy_grounds_server_fg_gpu0_util
+                name: GPU
+                unit: " %"
+                curve: smooth
+                yaxis_id: pct
+                group_by:
+                  func: avg
+                  duration: 15min
+                show:
+                  extremas: true
+              - entity: sensor.fantasy_grounds_server_fg_player_count
+                name: Players
+                unit: " "
+                yaxis_id: count
+                type: column
+                group_by:
+                  func: last
+                  duration: 10min
+              - entity: sensor.fantasy_grounds_server_fg_player_count
+                name: Active session
+                yaxis_id: pct
+                type: area
+                opacity: 0.1
+                color: "#653131"
+                show:
+                  in_header: false
+                  legend_value: false
+                transform: "return x > 0 ? 100 : 0"
+            apex_config:
+              chart:
+                height: 210px
+              legend:
+                show: true
+              stroke:
+                width: 2
+          - type: custom:apexcharts-card
+            graph_span: 24h
+            update_interval: 1m
+            header:
+              show: true
+              title: Power Usage
+              show_states: true
+              colorize_states: true
+            yaxis:
+              - id: watt
+                min: 0
+                max: ~200
+                decimals: 0
+            series:
+              - entity: sensor.fg_server_power_outlet_power
+                name: Total
+                unit: " W"
+                curve: smooth
+                yaxis_id: watt
+                group_by:
+                  func: avg
+                  duration: 15min
+                show:
+                  extremas: true
+              - entity: sensor.fantasy_grounds_server_fg_gpu0_power_w
+                name: GPU
+                unit: " W"
+                type: area
+                opacity: 0.5
+                curve: smooth
+                yaxis_id: watt
+                group_by:
+                  func: avg
+                  duration: 15min
+                show:
+                  extremas: true
+            apex_config:
+              chart:
+                height: 150px
+              legend:
+                show: true
+              stroke:
+                width: 2
+        grid_options:
+          columns: full
+    column_span: 2
+  - type: grid
+    cards:
+      - type: vertical-stack
+        cards:
+          - type: custom:uptime-card
+            title_template: Server Status
+            entity: binary_sensor.fg_ping
+            status_adaptive_color: true
+            icon: mdi:server
+            bar:
+              height: 20
+              amount: 64
+            tooltip:
+              hour24: true
+            init:
+              duration: 7
+            duration:
+              unit: day
+              quantity: 7
+        grid_options:
+          columns: full
+    column_span: 3
+cards: []
+header:
+  card:
+    type: markdown
+    text_only: true
+    content: "# Fantasy Grounds Server Information"
