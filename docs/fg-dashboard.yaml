@@ -221,12 +221,12 @@ sections:
             secondary: >-
               {% set c = states('sensor.fantasy_grounds_server_fg_player_count')|int %} 
               {% if c > 0 %} {{ c }} player{{ 's' if c>1 else '' }} 
-              {% else %} None {% endif %}
+              {% else %} 0 players {% endif %}
             icon: mdi:account-group
             icon_color: >
-              {% set v =
+              {% set c =
               states('sensor.fantasy_grounds_server_fg_player_count')|int %} {%
-              if v > 0 %} green {% else %} grey {% endif %}
+              if c > 0 %} green {% else %} grey {% endif %}
             tap_action: more-info
             layout: horizontal
           - type: custom:mushroom-template-card
