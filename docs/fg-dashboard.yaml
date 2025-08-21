@@ -188,10 +188,9 @@ sections:
           - type: custom:mushroom-template-card
             primary: Session
             secondary: >-
-              {% set c =
-              states('sensor.fantasy_grounds_server_fg_player_count')|int %} {%
-              if c > 0 %} {{ c }} player{{ 's' if c>1 else '' }} {{ 'now' }} {%
-              else %} idle {% endif %}
+              {% set c = states('sensor.fantasy_grounds_server_fg_player_count')|int %} 
+              {% if c > 0 %} Active {% else %} idle
+              {% endif %}
             icon: mdi:sword-cross
             icon_color: >-
               {% set c =
