@@ -52,8 +52,8 @@ All non-event sensors include expire_after (default 180s) so they go Unavailable
 * NVIDIA driver tools (nvidia-smi.exe) available. The script searches:
   * C:\Windows\System32\nvidia-smi.exe
   * C:\Program Files\NVIDIA Corporation\NVSMI\PATH
-* (Optional but recommended) A smart plug with power monitoring for whole-server watts and energy/cost in HA (e.g., Shelly Plug, Tapo P115, Kasa KP115, Sonoff POW/POWR3).
-* Authentication: If your MQTT broker uses a username/password, set $mqttUser/$mqttPass in each script. Credentials are stored in plain text — consider a limited service account on the broker.
+* (Optional) A smart plug with power monitoring for whole-server watts and energy/cost in HA (e.g., Shelly Plug, Tapo P115, Kasa KP115, Sonoff POW/POWR3).
+* Authentication: If your MQTT broker uses a username/password, set $mqttUser/$mqttPass in each script. !Credentials are stored in plain text!
 
 # Install
 
@@ -121,7 +121,7 @@ Unregister-ScheduledTask -TaskName "FG-HA-Stats"   -Confirm:$false -ErrorAction 
 All also share availability topic fg/server/availability (online retained).
 
 # Dashboard
-* A ready-made FG view is in:
+* A ready-made FG dashboard is in:
   * `docs/fg-dashboard.yaml`
   * `docs/fg-dashboard.png` (screenshot)
 
@@ -136,9 +136,9 @@ My dashboard have these additional components:
 * Uptime card (HACS) (https://github.com/dylandoamaral/uptime-card)
 
 # (Optional) Power & Cost (smart plug recommended)
-* Pair a plug with power monitoring in HA (Shelly, Tapo P115, Kasa KP115, Sonoff POW, etc.).
+* Add a plug with power monitoring in HA (Shelly, Tapo P115, Kasa KP115, Sonoff POW, etc.).
   * You’ll get sensor.<plug>_power (W) and …_energy (kWh) automatically.
-* Pair with Nordpool (or whatever your country provides) price entity to get daily/monthly cost.
+* Do a calculation with current electricity prices (Nordpool or whatever your country provides) to get daily/monthly cost if you want :-)
 
 # License
 
@@ -147,6 +147,7 @@ Apache 2.0 — see `LICENSE`.
 # Credits
 * Home Assistant MQTT Discovery
 * NVIDIA nvidia-smi
+* Chat-GPT for helping with Powershell issues (first time I've tried Powershell...)
 * Inspiration: many community snippets; this repo unifies them for FGU on Windows.
 
 # Changelog
